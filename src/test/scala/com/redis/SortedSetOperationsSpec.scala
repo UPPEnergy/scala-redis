@@ -1,6 +1,6 @@
 package com.redis
 
-import org.scalatest.Spec
+import org.scalatest.FunSpec
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.ShouldMatchers
@@ -10,7 +10,7 @@ import com.redis.RedisClient.{DESC, SUM}
 
 
 @RunWith(classOf[JUnitRunner])
-class SortedSetOperationsSpec extends Spec 
+class SortedSetOperationsSpec extends FunSpec 
                         with ShouldMatchers
                         with BeforeAndAfterEach
                         with BeforeAndAfterAll {
@@ -177,6 +177,24 @@ class SortedSetOperationsSpec extends Spec
 
       zrangebyscore("hackers", 1940, true, 1969, false, Some(0, 2), DESC).get should equal (
         List("yukihiro matsumoto", "richard stallman"))
+    }
+  }
+
+  describe("zrangebyscoreWithScore") {
+    it ("should return the elements between min and max") {
+      add
+
+      zrangebyscoreWithScore("hackers", 1940, true, 1969, true, None).get should equal(
+        List(("alan kay", 1940.0), ("richard stallman", 1953.0), ("yukihiro matsumoto", 1965.0), ("linus torvalds", 1969.0)))
+
+      zrangebyscoreWithScore("hackers", 1940, true, 1969, true, None, DESC).get should equal(
+        List(("linus torvalds", 1969.0), ("yukihiro matsumoto", 1965.0), ("richard stallman", 1953.0),("alan kay", 1940.0)))
+
+      zrangebyscoreWithScore("hackers", 1940, true, 1969, true, Some(3, 1)).get should equal (
+        List(("linus torvalds", 1969.0)))
+
+      zrangebyscoreWithScore("hackers", 1940, true, 1969, true, Some(3, 1), DESC).get should equal (
+        List(("alan kay", 1940.0)))
     }
   }
 }

@@ -1,6 +1,6 @@
 package com.redis
 
-import org.scalatest.Spec
+import org.scalatest.FunSpec
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.ShouldMatchers
@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
 
 
 @RunWith(classOf[JUnitRunner])
-class PubSubSpec extends Spec 
+class PubSubSpec extends FunSpec 
                  with ShouldMatchers
                  with BeforeAndAfterEach
                  with BeforeAndAfterAll {
@@ -37,6 +37,8 @@ class PubSubSpec extends Spec
         pubsub match {
           case S(channel, no) => println("subscribed to " + channel + " and count = " + no)
           case U(channel, no) => println("unsubscribed from " + channel + " and count = " + no)
+          case E(exception) => println("Fatal error caused consumer dead. Please init new consumer reconnecting to master or connect to backup")
+          
           case M(channel, msg) => 
             msg match {
               // exit will unsubscribe from all channels and stop subscription service

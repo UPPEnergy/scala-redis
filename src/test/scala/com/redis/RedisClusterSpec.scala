@@ -1,6 +1,6 @@
 package com.redis.cluster
 
-import org.scalatest.Spec
+import org.scalatest.FunSpec
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.ShouldMatchers
@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
 
 
 @RunWith(classOf[JUnitRunner])
-class RedisClusterSpec extends Spec 
+class RedisClusterSpec extends FunSpec 
                        with ShouldMatchers
                        with BeforeAndAfterEach
                        with BeforeAndAfterAll {
@@ -29,7 +29,7 @@ class RedisClusterSpec extends Spec
       val l = List("debasish", "maulindu", "ramanendu", "nilanjan", "tarun", "tarun", "tarun")
 
       // last 3 should map to the same node
-      l.map(r.nodeForKey(_)).reverse.slice(0, 3).forall(_.toString == "localhost:6381") should equal(true)
+      l.map(r.nodeForKey(_)).reverse.slice(0, 3).forall(_.toString == "localhost:6379") should equal(true)
 
       // set
       l foreach (s => r.nodeForKey(s).set(s, "working in anshin") should equal(true))

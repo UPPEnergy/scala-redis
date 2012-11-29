@@ -1,6 +1,6 @@
 package com.redis
 
-import org.scalatest.Spec
+import org.scalatest.FunSpec
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.ShouldMatchers
@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
 
 
 @RunWith(classOf[JUnitRunner])
-class StringOperationsSpec extends Spec 
+class StringOperationsSpec extends FunSpec 
                            with ShouldMatchers
                            with BeforeAndAfterEach
                            with BeforeAndAfterAll {
@@ -102,7 +102,7 @@ class StringOperationsSpec extends Spec
       r.set("anshin-2", "debasish") should equal(true)
       try {
         r.incr("anshin-2")
-      } catch { case ex => ex.getMessage should startWith("ERR value is not an integer") }
+      } catch { case ex: Throwable => ex.getMessage should startWith("ERR value is not an integer") }
     }
     it("should increment by 5 for a key that contains a number") {
       r.set("anshin-3", "10") should equal(true)
@@ -112,7 +112,7 @@ class StringOperationsSpec extends Spec
       r.set("anshin-4", "debasish") should equal(true)
       try {
         r.incrby("anshin-4", 5)
-      } catch { case ex => ex.getMessage should startWith("ERR value is not an integer") }
+      } catch { case ex: Throwable => ex.getMessage should startWith("ERR value is not an integer") }
     }
     it("should increment by 1.2 for a key that contains a floating point number") {
       try {
@@ -131,7 +131,7 @@ class StringOperationsSpec extends Spec
       r.set("anshin-2", "debasish") should equal(true)
       try {
         r.decr("anshin-2")
-      } catch { case ex => ex.getMessage should startWith("ERR value is not an integer") }
+      } catch { case ex: Throwable => ex.getMessage should startWith("ERR value is not an integer") }
     }
     it("should decrement by 5 for a key that contains a number") {
       r.set("anshin-3", "10") should equal(true)
@@ -141,7 +141,7 @@ class StringOperationsSpec extends Spec
       r.set("anshin-4", "debasish") should equal(true)
       try {
         r.decrby("anshin-4", 5)
-      } catch { case ex => ex.getMessage should startWith("ERR value is not an integer") }
+      } catch { case ex: Throwable => ex.getMessage should startWith("ERR value is not an integer") }
     }
   }
 
@@ -259,6 +259,41 @@ class StringOperationsSpec extends Spec
       r.getbit("mykey", 0) should equal(Some(0))
       r.getbit("mykey", 7) should equal(Some(1))
       r.getbit("mykey", 100) should equal(Some(0))
+    }
+  }
+
+  describe("bitcount") {
+    it("should do a population count") {
+      r.setbit("mykey", 7, 1)
+      r.bitcount("mykey") should equal(Some(1))
+      r.setbit("mykey", 8, 1)
+      r.bitcount("mykey") should equal(Some(2))
+    }
+  }
+
+  describe("bitop") {
+    it("should apply logical operators to the srckeys and store the results in destKey") {
+      // key1: 101
+      // key2:  10
+      r.setbit("key1", 0, 1)
+      r.setbit("key1", 2, 1)
+      r.setbit("key2", 1, 1)
+      r.bitop("AND", "destKey", "key1", "key2") should equal(Some(1))
+      // 101 AND 010 = 000
+      (0 to 2).foreach { bit =>
+        r.getbit("destKey", bit) should equal(Some(0))        
+      }
+
+      r.bitop("OR", "destKey", "key1", "key2") should equal(Some(1))
+      // 101 OR 010 = 111
+      (0 to 2).foreach { bit =>
+        r.getbit("destKey", bit) should equal(Some(1))        
+      }
+
+      r.bitop("NOT", "destKey", "key1") should equal(Some(1))
+      r.getbit("destKey", 0) should equal(Some(0))
+      r.getbit("destKey", 1) should equal(Some(1))
+      r.getbit("destKey", 2) should equal(Some(0))
     }
   }
 

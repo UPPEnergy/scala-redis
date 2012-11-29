@@ -29,13 +29,13 @@ trait StringOperations { self: Redis =>
 
   // INCR (key)
   // increments the specified key by 1
-  def incr(key: Any)(implicit format: Format): Option[Int] =
-    send("INCR", List(key))(asInt)
+  def incr(key: Any)(implicit format: Format): Option[Long] =
+    send("INCR", List(key))(asLong)
 
   // INCR (key, increment)
   // increments the specified key by increment
-  def incrby(key: Any, increment: Int)(implicit format: Format): Option[Int] =
-    send("INCRBY", List(key, increment))(asInt)
+  def incrby(key: Any, increment: Int)(implicit format: Format): Option[Long] =
+    send("INCRBY", List(key, increment))(asLong)
 
   // INCR (key, increment)
   // increments the specified key by increment
@@ -44,13 +44,13 @@ trait StringOperations { self: Redis =>
 
   // DECR (key)
   // decrements the specified key by 1
-  def decr(key: Any)(implicit format: Format): Option[Int] =
-    send("DECR", List(key))(asInt)
+  def decr(key: Any)(implicit format: Format): Option[Long] =
+    send("DECR", List(key))(asLong)
 
   // DECR (key, increment)
   // decrements the specified key by increment
-  def decrby(key: Any, increment: Int)(implicit format: Format): Option[Int] =
-    send("DECRBY", List(key, increment))(asInt)
+  def decrby(key: Any, increment: Int)(implicit format: Format): Option[Long] =
+    send("DECRBY", List(key, increment))(asLong)
 
   // MGET (key, key, key, ...)
   // get the values of all the specified keys.
@@ -70,8 +70,8 @@ trait StringOperations { self: Redis =>
   // SETRANGE key offset value
   // Overwrites part of the string stored at key, starting at the specified offset, 
   // for the entire length of value.
-  def setrange(key: Any, offset: Int, value: Any)(implicit format: Format): Option[Int] =
-    send("SETRANGE", List(key, offset, value))(asInt)
+  def setrange(key: Any, offset: Int, value: Any)(implicit format: Format): Option[Long] =
+    send("SETRANGE", List(key, offset, value))(asLong)
 
   // GETRANGE key start end
   // Returns the substring of the string value stored at key, determined by the offsets 
@@ -81,13 +81,13 @@ trait StringOperations { self: Redis =>
 
   // STRLEN key
   // gets the length of the value associated with the key
-  def strlen(key: Any)(implicit format: Format): Option[Int] =
-    send("STRLEN", List(key))(asInt)
+  def strlen(key: Any)(implicit format: Format): Option[Long] =
+    send("STRLEN", List(key))(asLong)
 
   // APPEND KEY (key, value)
   // appends the key value with the specified value.
-  def append(key: Any, value: Any)(implicit format: Format): Option[Int] =
-    send("APPEND", List(key, value))(asInt)
+  def append(key: Any, value: Any)(implicit format: Format): Option[Long] =
+    send("APPEND", List(key, value))(asLong)
 
   // GETBIT key offset
   // Returns the bit value at offset in the string value stored at key
@@ -99,8 +99,13 @@ trait StringOperations { self: Redis =>
   def setbit(key: Any, offset: Int, value: Any)(implicit format: Format): Option[Int] =
     send("SETBIT", List(key, offset, value))(asInt)
 
-  // SET EXPIRE (key, ttl)
-  // sets the ttl for the key
-  def expire(key: Any, ttl: Any)(implicit format: Format): Boolean =
-    send("EXPIRE", List(key,ttl))(asBoolean)
+  // BITOP op destKey srcKey...
+  // Perform a bitwise operation between multiple keys (containing string values) and store the result in the destination key.
+  def bitop(op: String, destKey: Any, srcKeys: Any*)(implicit format: Format): Option[Int] =
+    send("BITOP", op :: destKey :: srcKeys.toList)(asInt)
+
+  // BITCOUNT key range
+  // Count the number of set bits in the given key within the optional range
+  def bitcount(key: Any, range: Option[(Int, Int)] = None)(implicit format: Format): Option[Int] =
+    send("BITCOUNT", List[Any](key) ++ (range.map { r => List[Any](r._1, r._2) } getOrElse List[Any]()))(asInt)
 }

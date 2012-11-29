@@ -8,31 +8,52 @@ object ScalaRedisProject extends Build
 
   lazy val commonSettings: Seq[Setting[_]] = Seq(
     organization := "net.debasishg",
-    version := "2.6",
-    scalaVersion := "2.9.1",
-    scalacOptions ++= Seq("-deprecation", "-unchecked"),
-    resolvers ++= Seq(twitterRepo)
+    version := "2.8",
+    scalaVersion := "2.10.0-RC2",
+    crossScalaVersions := Seq("2.10.0-RC2", "2.9.2", "2.9.1"),
+
+    scalacOptions <++= scalaVersion.map {sv =>
+      if (sv contains "2.10") Seq("-deprecation", "-unchecked", "-feature", "-language:postfixOps")
+      else Seq("-deprecation", "-unchecked")
+    },
+
+    resolvers ++= Seq(akkaRepo)
   )
 
-  lazy val coreSettings = commonSettings ++ template ++ Seq(
+  lazy val coreSettings = commonSettings ++ Seq(
     name := "RedisClient",
 
-    libraryDependencies ++= Seq("commons-pool" % "commons-pool" % "1.5.6",
-      "org.slf4j"      % "slf4j-api"     % "1.6.1",
-      "org.slf4j"      % "slf4j-log4j12" % "1.6.1"  % "provided",
-      "log4j"          % "log4j"         % "1.2.16" % "provided",
-      "junit"          % "junit"         % "4.8.1"  % "test",
-      "org.scalatest"  % "scalatest_2.9.1" % "1.6.1" % "test",
-      "com.twitter"    % "util_2.9.1"    % "1.12.13" % "test" intransitive(),
-      "com.twitter"    % "finagle-core_2.9.1"  % "4.0.2" % "test"),
+    libraryDependencies <<= scalaVersion {v =>
+      if (v contains "2.10")
+        Seq(
+          "commons-pool"      % "commons-pool"             % "1.6",
+          "org.scala-lang"    %  "scala-actors"            % "2.10.0-RC2",
+          "com.typesafe.akka" %  "akka-actor_2.10.0-RC2"   % "2.1.0-RC2",
+          "org.slf4j"         %  "slf4j-api"               % "1.6.6",
+          "org.slf4j"         %  "slf4j-log4j12"           % "1.6.6"      % "provided",
+          "log4j"             %  "log4j"                   % "1.2.16"     % "provided",
+          "junit"             %  "junit"                   % "4.8.1"      % "test",
+          "org.scalatest"     %  "scalatest_2.10.0-RC2"    % "2.0.M4"     % "test")
+      else
+        Seq(
+          "commons-pool"      % "commons-pool"             % "1.6",
+          "com.typesafe.akka" %  "akka-actor"              % "2.0.3",
+          "org.scala-lang"    %  "scala-library"           % v,
+          "org.slf4j"         %  "slf4j-api"               % "1.6.6",
+          "org.slf4j"         %  "slf4j-log4j12"           % "1.6.6"      % "provided",
+          "log4j"             %  "log4j"                   % "1.2.16"     % "provided",
+          "junit"             %  "junit"                   % "4.8.1"      % "test",
+          "org.scalatest"     %  ("scalatest_" + v)          % "2.0.M4"      % "test")
+    },
 
+    excludeFilter in Test in unmanagedSources ~= { _ || "Patterns*.scala" },
     parallelExecution in Test := false,
     publishTo <<= version { (v: String) => 
       val nexus = "https://oss.sonatype.org/" 
       if (v.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus + "content/repositories/snapshots")
       else Some("releases" at nexus + "service/local/staging/deploy/maven2") 
     },
-    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+    credentials += Credentials(Path.userHome / ".sbt" / "sonatype.credentials"),
     publishMavenStyle := true,
     publishArtifact in Test := false,
     pomIncludeRepository := { repo => false },
@@ -58,35 +79,8 @@ object ScalaRedisProject extends Build
       </developers>),
     unmanagedResources in Compile <+= baseDirectory map { _ / "LICENSE" }
   )
-
-  lazy val fmpp = TaskKey[Seq[File]]("fmpp")
-  lazy val fmppOptions = SettingKey[Seq[String]]("fmpp-options")
-  lazy val fmppConfig = config("fmpp") hide
-
-  lazy val template = fmppConfig(Test) ++ fmppConfig(Compile) ++ templateBase
-  lazy val templateBase = Seq(
-    libraryDependencies += "net.sourceforge.fmpp" % "fmpp" % "0.9.14" % fmppConfig.name,
-    ivyConfigurations += fmppConfig,
-    fmppOptions := "--ignore-temporary-files" :: Nil,
-    fullClasspath in fmppConfig <<= update map { _ select configurationFilter(fmppConfig.name) map Attributed.blank }
-  )
-
-  def fmppConfig(c: Configuration): Seq[Setting[_]] = inConfig(c)(Seq(
-    sourceGenerators <+= fmpp,
-    fmpp <<= fmppTask,
-    mappings in packageSrc <<= (managedSources, sourceManaged) map { (srcs, base) => srcs x relativeTo(base) },
-    sources <<= managedSources
-  ))
-
-  lazy val fmppTask =
-    (fullClasspath in fmppConfig, runner in fmpp, unmanagedSources, sourceDirectory, includeFilter in unmanagedSources, sourceManaged, fmppOptions, streams) map { (cp, r, sources, srcRoot, filter, output, args, s) =>
-      IO.delete(output)
-      val arguments = "-U" +: "all" +: "-S" +: srcRoot.getAbsolutePath +: "-O" +: output.getAbsolutePath +: (args ++ sources.getPaths)
-      toError(r.run("fmpp.tools.CommandLine", cp.files, arguments, s.log))
-      (output ** filter).get
-  }
 }
 
 object Resolvers {
-  val twitterRepo = "release" at "http://maven.twttr.com"
+  val akkaRepo = "typesafe repo" at "http://repo.typesafe.com/typesafe/releases/"
 }
