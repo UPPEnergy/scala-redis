@@ -8,9 +8,9 @@ object ScalaRedisProject extends Build
 
   lazy val commonSettings: Seq[Setting[_]] = Seq(
     organization := "net.debasishg",
-    version := "2.8",
-    scalaVersion := "2.10.0-RC2",
-    crossScalaVersions := Seq("2.10.0-RC2", "2.9.2", "2.9.1"),
+    version := "2.10",
+    scalaVersion := "2.10.0",
+    crossScalaVersions := Seq("2.10.0-RC5"),
 
     scalacOptions <++= scalaVersion.map {sv =>
       if (sv contains "2.10") Seq("-deprecation", "-unchecked", "-feature", "-language:postfixOps")
@@ -26,27 +26,26 @@ object ScalaRedisProject extends Build
     libraryDependencies <<= scalaVersion {v =>
       if (v contains "2.10")
         Seq(
-          "commons-pool"      % "commons-pool"             % "1.6",
-          "org.scala-lang"    %  "scala-actors"            % "2.10.0-RC2",
-          "com.typesafe.akka" %  "akka-actor_2.10.0-RC2"   % "2.1.0-RC2",
-          "org.slf4j"         %  "slf4j-api"               % "1.6.6",
-          "org.slf4j"         %  "slf4j-log4j12"           % "1.6.6"      % "provided",
+          "commons-pool"      %  "commons-pool"            % "1.6",
+          "org.scala-lang"    %  "scala-actors"            % "2.10.0",
+          "com.typesafe.akka" %  "akka-actor_2.10"         % "2.1.0",
+          "org.slf4j"         %  "slf4j-api"               % "1.7.2",
+          "org.slf4j"         %  "slf4j-log4j12"           % "1.7.2"      % "provided",
           "log4j"             %  "log4j"                   % "1.2.16"     % "provided",
           "junit"             %  "junit"                   % "4.8.1"      % "test",
-          "org.scalatest"     %  "scalatest_2.10.0-RC2"    % "2.0.M4"     % "test")
+          "org.scalatest"     %  "scalatest_2.10.0"    % "2.0.M5"     % "test")
       else
         Seq(
-          "commons-pool"      % "commons-pool"             % "1.6",
-          "com.typesafe.akka" %  "akka-actor"              % "2.0.3",
+          "commons-pool"      %  "commons-pool"            % "1.6",
+          "com.typesafe.akka" %  "akka-actor"              % "2.0.5",
           "org.scala-lang"    %  "scala-library"           % v,
-          "org.slf4j"         %  "slf4j-api"               % "1.6.6",
-          "org.slf4j"         %  "slf4j-log4j12"           % "1.6.6"      % "provided",
+          "org.slf4j"         %  "slf4j-api"               % "1.7.2",
+          "org.slf4j"         %  "slf4j-log4j12"           % "1.7.2"      % "provided",
           "log4j"             %  "log4j"                   % "1.2.16"     % "provided",
           "junit"             %  "junit"                   % "4.8.1"      % "test",
           "org.scalatest"     %  ("scalatest_" + v)          % "2.0.M4"      % "test")
     },
 
-    excludeFilter in Test in unmanagedSources ~= { _ || "Patterns*.scala" },
     parallelExecution in Test := false,
     publishTo <<= version { (v: String) => 
       val nexus = "https://oss.sonatype.org/" 
