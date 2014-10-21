@@ -2,3 +2,7 @@
 target
 project/boot
 *.swp
+
+.idea
+
+.idea_modules
